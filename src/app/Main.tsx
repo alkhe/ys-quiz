@@ -108,7 +108,9 @@ function Quiz({ quiz, new_quiz }: QuizProps) {
     ? <>
         Congrats! You have identified all of the buildings. <a onClick={() => (set_quiz_index(0), new_quiz())}>New Quiz?</a>
       </>
-    : `Where ${ item.grammar[1] === 's' ? 'is' : 'are' } ${ item.grammar[0] === 'd' ? 'the ' : '' }${ item.name }${ item.ref != null ? ' (' + item.ref + ')' : '' }? (Progess: ${ quiz_index }/${ quiz.length })`
+    : <>
+      Where { item.grammar[1] === 's' ? 'is' : 'are' } { item.grammar[0] === 'd' ? 'the ' : '' }{ item.name }{ item.ref != null ? ' (' + item.ref + ')' : '' }? <span className="font-bold">(Progress: { quiz_index }/{ quiz.length })</span>
+    </>
 
   return (
     <div className="flex flex-col items-stretch flex-1">
