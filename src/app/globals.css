@@ -44,3 +44,9 @@ body {
 .buildings path:hover {
   fill: rgba(10, 200, 200, .5) !important;
 }
+
+a {
+  text-decoration: underline;
+  color: #22cccc;
+  cursor: pointer;
+}

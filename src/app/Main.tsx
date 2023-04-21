@@ -1,11 +1,12 @@
 'use client'
 
-import React, { Component } from 'react'
+import React, { Component, useState, useEffect, useCallback } from 'react'
 import geojson_data from '@/../assets/unsw-fixed.geo.json'
 import { Feature, GeoJsonObject } from 'geojson'
-import { MapContainer, TileLayer, Pane, GeoJSON as GeoJSONRenderer } from 'react-leaflet'
+import { MapContainer, TileLayer, Pane, GeoJSON as GeoJSONRenderer, useMap } from 'react-leaflet'
+import { Map as LeafletMap } from 'leaflet'
 import shuffle from '@/utility/shuffle'
-import { Path, GeoJSON } from 'leaflet'
+import { useMediaQuery } from 'react-responsive'
 
 const QUIZ_COMPLETE = -1
 
@@ -21,19 +22,31 @@ const quiz_items: QuizItem[] = geojson_data.features.map(f => {
   return { id: f.properties.id, name, grammar, ref }
 })
 
-type MapProps = {
-  on_click_feature: (id: number) => void
+type MapExtractorProps = {
+  map_ready: (map: LeafletMap) => void
 }
 
-function Map({ on_click_feature }: MapProps) {
+function MapExtractor({ map_ready }: MapExtractorProps) {
+  const map: LeafletMap = useMap()
+  useEffect(() => map_ready(map), [map])
+  return (<></>)
+}
+
+type MapProps = {
+  on_click_feature: (id: number) => void
+  zoom: number
+  map_ready: (map: LeafletMap) => void
+}
+
+function Map({ on_click_feature, zoom, map_ready }: MapProps) {
   return (
     <MapContainer
       className='flex-1'
       center={[-33.917101, 151.230981]}
-      zoom={17}
-      minZoom={16}
+      zoom={zoom}
       doubleClickZoom={false}
       zoomControl={false}>
+      <MapExtractor map_ready={map_ready} />
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" />
       <Pane name="buildings" className="buildings">
@@ -50,42 +63,76 @@ function Map({ on_click_feature }: MapProps) {
   )
 }
 
+export type QuizProps = {
+  quiz: QuizItem[]
+  new_quiz: () => void
+}
+
+function responsize_zoom(is_large : boolean) {
+  return is_large ? 17 : 16
+}
+
+function Quiz({ quiz, new_quiz }: QuizProps) {
+  const [quiz_index, set_quiz_index] = useState(0)
+  const [map, set_map] = useState<LeafletMap | null>(null)
+
+  const is_large = useMediaQuery({ query: '(min-width: 1024px)' })
+
+  const [zoom, set_zoom] = useState(responsize_zoom(is_large))
+
+  const on_click_feature = useCallback((id: number) => {
+    if (quiz_index == QUIZ_COMPLETE) return
+
+    if (id === quiz[quiz_index].id) {
+      if (quiz_index === quiz.length - 1) {
+        set_quiz_index(QUIZ_COMPLETE)
+      } else {
+        set_quiz_index(quiz_index + 1)
+      }
+    }
+  }, [quiz, quiz_index])
+
+  useEffect(() => {
+    if (map == null) return
+    map.setZoom(zoom)
+  }, [zoom])
+
+  useEffect(() => {
+    if (map == null) return
+    set_zoom(responsize_zoom(is_large))
+  }, [is_large])
+
+  const item = quiz_index === QUIZ_COMPLETE ? null : quiz[quiz_index]
+
+  const message = item == null
+    ? <>
+        Congrats! You have identified all of the buildings. <a onClick={() => (set_quiz_index(0), new_quiz())}>New Quiz?</a>
+      </>
+    : `Where ${ item.grammar[1] === 's' ? 'is' : 'are' } ${ item.grammar[0] === 'd' ? 'the ' : '' }${ item.name }${ item.ref != null ? ' (' + item.ref + ')' : '' }? (Progess: ${ quiz_index }/${ quiz.length })`
+
+  return (
+    <div className="flex flex-col items-stretch flex-1">
+      <div className="self-center mb-4">{ message }</div>
+      <Map on_click_feature={on_click_feature} zoom={zoom} map_ready={set_map} />
+    </div>
+  )
+}
+
 export type MainState = {
-  queue: QuizItem[]
-  queue_index: number
+  quiz: QuizItem[]
 }
 
 export default class Main extends Component<{}, MainState> {
-  state = {
-    queue: shuffle(quiz_items).slice(0, 10),
-    queue_index: 0
+  state: MainState = {
+    quiz: shuffle(quiz_items).slice(0, 10)
   }
-  on_click_feature = (id: number) => {
-    const { queue, queue_index } = this.state
-
-    if (queue_index == QUIZ_COMPLETE) return
-
-    if (id === queue[queue_index].id) {
-      if (queue_index === queue.length - 1) {
-        this.setState({ queue_index: QUIZ_COMPLETE })
-      } else {
-        this.setState({ queue_index: queue_index + 1 })
-      }
-    }
+  new_quiz = () => {
+    this.setState({
+      quiz: shuffle(quiz_items).slice(0, 10)
+    })
   }
   render() {
-    const { queue, queue_index } = this.state
-    const item = queue_index !== QUIZ_COMPLETE ? queue[queue_index] : null
-
-    const message = item == null
-      ? 'Congrats! You have identified all of the buildings.'
-      : `Where ${ item.grammar[1] === 's' ? 'is' : 'are' } ${ item.grammar[0] === 'd' ? 'the ' : '' }${ item.name }${ item.ref != null ? ' (' + item.ref + ')' : '' }? (Progess: ${ queue_index }/${ queue.length })`
-
-    return (
-      <div className="flex flex-col items-stretch flex-1">
-        <div className="self-center mb-4">{ message }</div>
-        <Map on_click_feature={this.on_click_feature} />
-      </div>
-    )
+    console.log(this.state.quiz)
+    return <Quiz quiz={ this.state.quiz } new_quiz={this.new_quiz} />
   }
 }
