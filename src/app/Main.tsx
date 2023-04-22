@@ -47,6 +47,7 @@ function Map({ on_click_feature, zoom, map_ready }: MapProps) {
       center={UNSW_COORDS}
       zoom={zoom}
       minZoom={15}
+      zoomSnap={.25}
       doubleClickZoom={false}
       zoomControl={false}>
       <MapExtractor map_ready={map_ready} />
@@ -72,9 +73,7 @@ export type QuizProps = {
   new_quiz: (items: number) => void
 }
 
-function responsize_zoom(is_large : boolean) {
-  return is_large ? 17 : 16
-}
+const responsive_zoom = [15.5, 16.25, 17]
 
 function Quiz({ quiz, clear_quiz, new_quiz }: QuizProps) {
   const [quiz_index, set_quiz_index] = useState(0)
@@ -82,8 +81,12 @@ function Quiz({ quiz, clear_quiz, new_quiz }: QuizProps) {
   const [quiz_size, set_quiz_size] = useState(10)
 
   const is_large = useMediaQuery({ query: '(min-width: 1024px)' })
+  const is_medium = useMediaQuery({ query: '(min-width: 768px)' })
+  const screen_width = is_large ? 2
+    : is_medium ? 1
+    : 0
 
-  const [zoom, set_zoom] = useState(responsize_zoom(is_large))
+  const [zoom, set_zoom] = useState(responsive_zoom[screen_width])
 
   const on_click_feature = useCallback((id: number) => {
     if (quiz == null || quiz_index == QUIZ_COMPLETE) return
@@ -113,8 +116,8 @@ function Quiz({ quiz, clear_quiz, new_quiz }: QuizProps) {
 
   useEffect(() => {
     if (map == null) return
-    set_zoom(responsize_zoom(is_large))
-  }, [is_large])
+    set_zoom(responsive_zoom[screen_width])
+  }, [screen_width])
 
   let message: ReactNode = <></>
 
