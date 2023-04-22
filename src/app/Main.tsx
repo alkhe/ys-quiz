@@ -123,7 +123,7 @@ function Quiz({ quiz, clear_quiz, new_quiz }: QuizProps) {
 
   if (quiz == null) {
     message = <>
-      How many locations would you like to test?
+      How many locations would you like to test? (Max: {quiz_items.length})
       <form className="inline-block" onSubmit={() => new_quiz(quiz_size)}>
         <input className="ml-4 px-2" type="number" min={1} max={quiz_items.length} value={quiz_size} onChange={e => set_quiz_size(clamp(1, quiz_items.length, Number(e.target.value)))} />
         <button type="submit" className="ml-2 px-2">Go</button>
