@@ -10,7 +10,6 @@ import clamp from '@/utility/clamp'
 import { useMediaQuery } from 'react-responsive'
 
 const QUIZ_COMPLETE = -1
-
 const UNSW_COORDS: LatLngTuple = [-33.917101, 151.230981]
 
 export type QuizItem = {
@@ -121,7 +120,7 @@ function Quiz({ quiz, clear_quiz, new_quiz }: QuizProps) {
 
   if (quiz == null) {
     message = <>
-      How many buildings would you like to test?
+      How many locations would you like to test?
       <form className="inline-block" onSubmit={() => new_quiz(quiz_size)}>
         <input className="ml-4 px-2" type="number" min={1} max={quiz_items.length} value={quiz_size} onChange={e => set_quiz_size(clamp(1, quiz_items.length, Number(e.target.value)))} />
         <button type="submit" className="ml-2 px-2">Go</button>
@@ -140,8 +139,11 @@ function Quiz({ quiz, clear_quiz, new_quiz }: QuizProps) {
   }
 
   return (
-    <div className="flex flex-col items-stretch flex-1">
-      <div className="self-center mb-4 mx-4 md:mx-0">{ message }</div>
+    <div className="flex flex-col items-stretch flex-1"
+      style={{
+        height: window.innerHeight
+      }}>
+      <div className="self-center my-4 mx-4 md:mx-0">{ message }</div>
       <Map on_click_feature={on_click_feature} zoom={zoom} map_ready={set_map} />
     </div>
   )

@@ -15,7 +15,7 @@ const Main = dynamic(() => import('./Main'), {
 
 export default function Home() {
   return (
-    <main className={`flex flex-col min-h-screen items-stretch pt-4 ${fira_mono.className}`}>
+    <main className={`flex flex-col h-full items-stretch ${fira_mono.className}`}>
       <Main />
     </main>
   )
