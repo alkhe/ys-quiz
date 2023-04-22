@@ -1,12 +1,14 @@
 /** @type {import('next').NextConfig} */
-const prod = process.env.NODE_ENV === 'production'
+const mode = process.env.MODE
 
 const nextConfig = {
   experimental: {
     appDir: true,
   },
   output: 'export',
-  assetPrefix: prod ? './' : undefined
+  distDir: 'docs',
+  basePath: mode === 'pages' ? '/ys-quiz' : undefined
 }
 
 module.exports = nextConfig
+

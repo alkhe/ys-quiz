@@ -4,11 +4,13 @@ import React, { Component, useState, useEffect, useCallback } from 'react'
 import geojson_data from '@/../assets/unsw-fixed.geo.json'
 import { Feature, GeoJsonObject } from 'geojson'
 import { MapContainer, TileLayer, Pane, GeoJSON as GeoJSONRenderer, useMap } from 'react-leaflet'
-import { Map as LeafletMap } from 'leaflet'
+import { Map as LeafletMap, LatLngTuple } from 'leaflet'
 import shuffle from '@/utility/shuffle'
 import { useMediaQuery } from 'react-responsive'
 
 const QUIZ_COMPLETE = -1
+
+const UNSW_COORDS: LatLngTuple = [-33.917101, 151.230981]
 
 export type QuizItem = {
   id: number
@@ -42,8 +44,9 @@ function Map({ on_click_feature, zoom, map_ready }: MapProps) {
   return (
     <MapContainer
       className='flex-1'
-      center={[-33.917101, 151.230981]}
+      center={UNSW_COORDS}
       zoom={zoom}
+      minZoom={15}
       doubleClickZoom={false}
       zoomControl={false}>
       <MapExtractor map_ready={map_ready} />
@@ -95,6 +98,7 @@ function Quiz({ quiz, new_quiz }: QuizProps) {
   useEffect(() => {
     if (map == null) return
     map.setZoom(zoom)
+    map.setView(UNSW_COORDS)
   }, [zoom])
 
   useEffect(() => {
