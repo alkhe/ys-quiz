@@ -76,7 +76,7 @@ input[type=number]::-webkit-inner-spin-button {
 }
 
 button[type=submit] {
-  background: #377;
+  background: #388;
   outline: none;
   border-radius: 3px;
 
@@ -84,6 +84,10 @@ button[type=submit] {
 }
 
 button[type=submit]:hover {
-  background: #488;
+  background: #499;
+}
+
+button[type=submit]:active {
+  background: #155;
 }
 
