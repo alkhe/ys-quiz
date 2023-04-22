@@ -95,11 +95,19 @@ function Quiz({ quiz, new_quiz }: QuizProps) {
     }
   }, [quiz, quiz_index])
 
-  useEffect(() => {
+  const play_again = () => {
+    set_quiz_index(0)
+    new_quiz()
+    reset_view()
+  }
+
+  const reset_view = () => {
     if (map == null) return
     map.setZoom(zoom)
     map.setView(UNSW_COORDS)
-  }, [zoom])
+  }
+
+  useEffect(reset_view, [zoom])
 
   useEffect(() => {
     if (map == null) return
@@ -110,7 +118,7 @@ function Quiz({ quiz, new_quiz }: QuizProps) {
 
   const message = item == null
     ? <>
-        Congrats! You have identified all of the buildings. <a onClick={() => (set_quiz_index(0), new_quiz())}>New Quiz?</a>
+        Congrats! You have identified all of the buildings. <a onClick={play_again}>Play Again?</a>
       </>
     : <>
       Where { item.grammar[1] === 's' ? 'is' : 'are' } { item.grammar[0] === 'd' ? 'the ' : '' }{ item.name }{ item.ref != null ? ' (' + item.ref + ')' : '' }? <span className="font-bold">(Progress: { quiz_index }/{ quiz.length })</span>
@@ -118,7 +126,7 @@ function Quiz({ quiz, new_quiz }: QuizProps) {
 
   return (
     <div className="flex flex-col items-stretch flex-1">
-      <div className="self-center mb-4">{ message }</div>
+      <div className="self-center mb-4 mx-4 md:mx-0">{ message }</div>
       <Map on_click_feature={on_click_feature} zoom={zoom} map_ready={set_map} />
     </div>
   )
@@ -138,7 +146,6 @@ export default class Main extends Component<{}, MainState> {
     })
   }
   render() {
-    console.log(this.state.quiz)
     return <Quiz quiz={ this.state.quiz } new_quiz={this.new_quiz} />
   }
 }
