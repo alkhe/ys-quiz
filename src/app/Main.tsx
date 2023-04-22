@@ -1,11 +1,12 @@
 'use client'
 
-import React, { Component, useState, useEffect, useCallback } from 'react'
+import React, { Component, ReactNode, useState, useEffect, useCallback } from 'react'
 import geojson_data from '@/../assets/unsw-fixed.geo.json'
 import { Feature, GeoJsonObject } from 'geojson'
 import { MapContainer, TileLayer, Pane, GeoJSON as GeoJSONRenderer, useMap } from 'react-leaflet'
 import { Map as LeafletMap, LatLngTuple } from 'leaflet'
 import shuffle from '@/utility/shuffle'
+import clamp from '@/utility/clamp'
 import { useMediaQuery } from 'react-responsive'
 
 const QUIZ_COMPLETE = -1
@@ -67,24 +68,26 @@ function Map({ on_click_feature, zoom, map_ready }: MapProps) {
 }
 
 export type QuizProps = {
-  quiz: QuizItem[]
-  new_quiz: () => void
+  quiz?: QuizItem[]
+  clear_quiz: () => void
+  new_quiz: (items: number) => void
 }
 
 function responsize_zoom(is_large : boolean) {
   return is_large ? 17 : 16
 }
 
-function Quiz({ quiz, new_quiz }: QuizProps) {
+function Quiz({ quiz, clear_quiz, new_quiz }: QuizProps) {
   const [quiz_index, set_quiz_index] = useState(0)
   const [map, set_map] = useState<LeafletMap | null>(null)
+  const [quiz_size, set_quiz_size] = useState(10)
 
   const is_large = useMediaQuery({ query: '(min-width: 1024px)' })
 
   const [zoom, set_zoom] = useState(responsize_zoom(is_large))
 
   const on_click_feature = useCallback((id: number) => {
-    if (quiz_index == QUIZ_COMPLETE) return
+    if (quiz == null || quiz_index == QUIZ_COMPLETE) return
 
     if (id === quiz[quiz_index].id) {
       if (quiz_index === quiz.length - 1) {
@@ -97,7 +100,7 @@ function Quiz({ quiz, new_quiz }: QuizProps) {
 
   const play_again = () => {
     set_quiz_index(0)
-    new_quiz()
+    clear_quiz()
     reset_view()
   }
 
@@ -114,15 +117,27 @@ function Quiz({ quiz, new_quiz }: QuizProps) {
     set_zoom(responsize_zoom(is_large))
   }, [is_large])
 
-  const item = quiz_index === QUIZ_COMPLETE ? null : quiz[quiz_index]
+  let message: ReactNode = <></>
 
-  const message = item == null
-    ? <>
-        Congrats! You have identified all of the buildings. <a onClick={play_again}>Play Again?</a>
-      </>
-    : <>
-      Where { item.grammar[1] === 's' ? 'is' : 'are' } { item.grammar[0] === 'd' ? 'the ' : '' }{ item.name }{ item.ref != null ? ' (' + item.ref + ')' : '' }? <span className="font-bold">(Progress: { quiz_index }/{ quiz.length })</span>
+  if (quiz == null) {
+    message = <>
+      How many buildings would you like to test?
+      <form className="inline-block" onSubmit={() => new_quiz(quiz_size)}>
+        <input className="ml-4 px-2" type="number" min={1} max={quiz_items.length} value={quiz_size} onChange={e => set_quiz_size(clamp(1, quiz_items.length, Number(e.target.value)))} />
+        <button type="submit" className="ml-2 px-2">Go</button>
+      </form>
     </>
+  } else {
+    const item = quiz_index === QUIZ_COMPLETE ? null : quiz[quiz_index]
+
+    message = item == null
+      ? <>
+          Congrats! You have identified all of the buildings. <a onClick={play_again}>Play Again?</a>
+        </>
+      : <>
+        Where { item.grammar[1] === 's' ? 'is' : 'are' } { item.grammar[0] === 'd' ? 'the ' : '' }{ item.name }{ item.ref != null ? ' (' + item.ref + ')' : '' }? <span className="font-bold">(Progress: { quiz_index }/{ quiz.length })</span>
+      </>
+  }
 
   return (
     <div className="flex flex-col items-stretch flex-1">
@@ -133,19 +148,21 @@ function Quiz({ quiz, new_quiz }: QuizProps) {
 }
 
 export type MainState = {
-  quiz: QuizItem[]
+  quiz?: QuizItem[]
 }
 
 export default class Main extends Component<{}, MainState> {
-  state: MainState = {
-    quiz: shuffle(quiz_items).slice(0, 10)
-  }
-  new_quiz = () => {
+  state: MainState = {}
+  new_quiz = (items: number) => {
     this.setState({
-      quiz: shuffle(quiz_items).slice(0, 10)
+      quiz: shuffle(quiz_items).slice(0, items)
     })
   }
+  clear_quiz = () => {
+    this.setState({ quiz: undefined })
+  }
   render() {
-    return <Quiz quiz={ this.state.quiz } new_quiz={this.new_quiz} />
+    return <Quiz quiz={ this.state.quiz } clear_quiz={this.clear_quiz} new_quiz={this.new_quiz} />
   }
 }
+

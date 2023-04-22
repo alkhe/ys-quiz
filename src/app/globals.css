@@ -57,3 +57,26 @@ a {
   color: #22cccc;
   cursor: pointer;
 }
+
+input {
+  background: #333;
+  outline: none;
+  border-radius: 3px;
+}
+
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+button[type=submit] {
+  background: #377;
+  outline: none;
+  border-radius: 3px;
+
+  transition: background .15s ease-out;
+}
+
+button[type=submit]:hover {
+  background: #488;
+}
+
